@@ -1,13 +1,13 @@
--- Bases de datos del taller de microservicios: Gestor de historias de usuario y sprints
--- Cada servicio tiene SU PROPIA base de datos (no comparten tablas ni llaves foráneas).
--- Importar desde phpMyAdmin (pestaña SQL), sin seleccionar ninguna base.
+-- Base de datos del taller monolítico: Gestor de historias de usuario y sprints
+-- Importar desde phpMyAdmin (pestaña SQL o Importar), sin seleccionar ninguna base.
 
--- ============ Servicio de SPRINTS ============
-CREATE DATABASE IF NOT EXISTS sprints_db
+CREATE DATABASE IF NOT EXISTS gestor_historias
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE sprints_db;
+USE gestor_historias;
 
+DROP TABLE IF EXISTS historias;
 DROP TABLE IF EXISTS sprints;
+
 CREATE TABLE sprints (
     id           INT AUTO_INCREMENT PRIMARY KEY,
     nombre       VARCHAR(100) NOT NULL,
@@ -16,16 +16,6 @@ CREATE TABLE sprints (
     fecha_fin    DATE NOT NULL
 ) ENGINE=InnoDB;
 
-INSERT INTO sprints (nombre, objetivo, fecha_inicio, fecha_fin) VALUES
-('Sprint 1', 'Acceso de usuarios al sistema', '2026-11-02', '2026-11-15'),
-('Sprint 2', 'Tableros e informes de avance',  '2026-11-16', '2026-11-29');
-
--- ============ Servicio de HISTORIAS ============
-CREATE DATABASE IF NOT EXISTS historias_db
-  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE historias_db;
-
-DROP TABLE IF EXISTS historias;
 CREATE TABLE historias (
     id                 INT AUTO_INCREMENT PRIMARY KEY,
     titulo             VARCHAR(150) NOT NULL,
@@ -36,8 +26,15 @@ CREATE TABLE historias (
     puntos             INT NOT NULL,
     fecha_creacion     DATE NOT NULL,
     fecha_finalizacion DATE NULL,
-    sprint_id          INT NOT NULL   -- referencia al servicio de sprints (sin FOREIGN KEY: otra base de datos)
+    sprint_id          INT NOT NULL,
+    CONSTRAINT fk_historias_sprint FOREIGN KEY (sprint_id)
+        REFERENCES sprints(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+-- Datos de ejemplo
+INSERT INTO sprints (nombre, objetivo, fecha_inicio, fecha_fin) VALUES
+('Sprint 1', 'Acceso de usuarios al sistema', '2026-11-02', '2026-11-15'),
+('Sprint 2', 'Tableros e informes de avance',  '2026-11-16', '2026-11-29');
 
 INSERT INTO historias (titulo, descripcion, responsable, prioridad, estado, puntos, fecha_creacion, fecha_finalizacion, sprint_id) VALUES
 ('Registro de usuarios',   'Como visitante quiero registrarme para poder acceder al sistema.',        'Ana',    'alta',  'finalizada',  5, '2026-11-02', '2026-11-09', 1),
@@ -45,5 +42,3 @@ INSERT INTO historias (titulo, descripcion, responsable, prioridad, estado, punt
 ('Recuperar contraseña',   'Como usuario quiero recuperar mi contraseña si la olvido.',               'Ana',    'media', 'impedimento', 8, '2026-11-04', NULL,         1),
 ('Tablero de historias',   'Como líder quiero ver las historias por estado para seguir el avance.',   'Carlos', 'media', 'nueva',       8, '2026-11-16', NULL,         2),
 ('Informe por sprint',     'Como líder quiero un informe por sprint para presentar el avance.',       'Laura',  'baja',  'nueva',      13, '2026-11-16', NULL,         2);
-
--- El servicio de INFORMES no tiene base de datos: calcula sus reportes consultando a los otros dos.
